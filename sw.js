@@ -1,6 +1,6 @@
 // Service worker de Mi Revista: la app funciona sin internet.
 // Al cambiar archivos de la app, sube el número de VERSION para que los celulares se actualicen.
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = 'mi-revista-' + VERSION;
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png'];
 
