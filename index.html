@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Mi Revista</title>
-<meta name="theme-color" content="#f6f1e7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" id="tc" content="#121212">
+<meta name="color-scheme" content="light dark">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -19,11 +19,11 @@
   --accent:#c2410c; --accent-ink:#fff; --ok:#2f7d4f; --shadow:0 2px 0 rgba(0,0,0,.04),0 8px 24px rgba(60,40,10,.08);
 }
 @media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){--bg:#121212;--paper:#1e1e1e;--ink:#f1eadb;--muted:#a39886;--line:#38311f;--accent:#f97316;--accent-ink:#1a1209;--ok:#5fc287;--shadow:0 8px 24px rgba(0,0,0,.35)}
+  :root:not([data-theme="light"]){--bg:#17140f;--paper:#211d16;--ink:#f1eadb;--muted:#a39886;--line:#38311f;--accent:#f97316;--accent-ink:#1a1209;--ok:#5fc287;--shadow:0 8px 24px rgba(0,0,0,.35)}
 }
-:root[data-theme="dark"]{--bg:#121212;--paper:#211d16;--ink:#f1eadb;--muted:#a39886;--line:#38311f;--accent:#f97316;--accent-ink:#1a1209;--ok:#5fc287;--shadow:0 8px 24px rgba(0,0,0,.35)}
+:root[data-theme="dark"]{--bg:#17140f;--paper:#211d16;--ink:#f1eadb;--muted:#a39886;--line:#38311f;--accent:#f97316;--accent-ink:#1a1209;--ok:#5fc287;--shadow:0 8px 24px rgba(0,0,0,.35)}
 *{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+html{background:var(--bg);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
 body{overscroll-behavior-y:none}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
 h1,h2,h3,.serif{font-family:Georgia,'Times New Roman',serif}
@@ -128,6 +128,10 @@ textarea{min-height:130px;resize:vertical}
 #toast.show{opacity:1}
 /* ---------- responsive ---------- */
 #d-entry .foot,#d-view .foot{position:sticky;bottom:0;margin:20px calc(-1*var(--pad-x)) 0;padding:10px var(--pad-x);background:var(--paper);border-top:1px solid var(--line);z-index:3}
+#d-entry .dlg,#d-view .dlg{display:flex;flex-direction:column;padding-bottom:0}
+#d-entry .dlg>*,#d-view .dlg>*{flex-shrink:0}
+#d-entry .dlg>:nth-last-child(2),#d-view .dlg>:nth-last-child(2){margin-bottom:16px}
+#d-entry .foot,#d-view .foot{margin-top:auto;padding-bottom:calc(10px + env(safe-area-inset-bottom))}
 #fab{display:none}
 @media (min-width:1500px){
   .layout{max-width:1640px;grid-template-columns:250px 1fr}
@@ -744,13 +748,23 @@ $('#b-random').onclick = ()=>{
   if(!p.length) return toast('No tienes nada pendiente 🎉');
   openView(p[Math.floor(Math.random()*p.length)].id);
 };
+function syncTheme(){
+  const de = document.documentElement;
+  const t = de.dataset.theme || (matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light');
+  de.style.colorScheme = t;
+  const bg = getComputedStyle(de).getPropertyValue('--bg').trim();
+  if(bg) $('#tc').setAttribute('content', bg);
+}
 $('#b-theme').onclick = ()=>{
   const cur = document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
   const next = cur==='dark'?'light':'dark';
   document.documentElement.dataset.theme = next;
+  syncTheme();
   try{ localStorage.setItem('revista-theme', next); }catch{}
 };
 try{ const t=localStorage.getItem('revista-theme'); if(t) document.documentElement.dataset.theme=t; }catch{}
+syncTheme();
+matchMedia('(prefers-color-scheme:dark)').addEventListener?.('change', syncTheme);
 $('#q').addEventListener('input', e=>{ state.q=e.target.value; render(); });
 $('#side').addEventListener('click', e=>{
   if(e.target.closest('#b-newcat')) return openCat();
@@ -767,6 +781,8 @@ document.querySelectorAll('dialog').forEach(d=>d.addEventListener('click', e=>{ 
 
 /* ---------- app instalable (PWA) ---------- */
 if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', ()=>{ if(hadController) toast('App actualizada ✔ Ciérrala y ábrela de nuevo para ver los cambios'); });
   addEventListener('load', ()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 }
 
