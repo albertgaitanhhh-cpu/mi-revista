@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Mi Revista</title>
-<meta name="theme-color" id="tc" content="#121212">
+<meta name="theme-color" id="tc" content="#f6f1e7">
 <meta name="color-scheme" content="light dark">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
@@ -133,6 +133,9 @@ textarea{min-height:130px;resize:vertical}
 #d-entry .dlg>:nth-last-child(2),#d-view .dlg>:nth-last-child(2){margin-bottom:16px}
 #d-entry .foot,#d-view .foot{margin-top:auto;padding-bottom:calc(10px + env(safe-area-inset-bottom))}
 #fab{display:none}
+#b-menu,#b-search,#scrim,.drawer-actions{display:none}
+#scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:25;opacity:0;pointer-events:none;transition:opacity .2s}
+.brand .sub{display:flex;align-items:baseline}
 @media (min-width:1500px){
   .layout{max-width:1640px;grid-template-columns:250px 1fr}
   .grid{columns:300px}
@@ -145,23 +148,28 @@ textarea{min-height:130px;resize:vertical}
   .inserter button{padding:6px 12px}
 }
 @media (max-width:800px){
-  header{position:static;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;gap:8px 10px;flex-wrap:wrap}
-  .brand{flex-direction:column;align-items:flex-start;gap:0;margin-right:0;flex:1 1 auto;min-width:0}
-  .brand h1{font-size:1.5rem}
-  #stats{font-size:.78rem}
-  .actions{flex:0 0 auto;flex-wrap:nowrap;gap:4px}
-  .actions .lbl{display:none}
-  .actions .btn{min-width:42px;min-height:42px;padding:0 8px;font-size:1.1rem}
-  #b-new{display:none}
-  #q{order:3;flex:1 1 100%;max-width:none;min-height:42px}
+  header{position:sticky;top:0;padding:calc(6px + env(safe-area-inset-top)) 10px 6px;gap:6px 8px;flex-wrap:wrap;border-bottom-width:1px}
+  #b-menu,#b-search{display:grid;place-items:center;flex:none;min-width:42px;min-height:42px;padding:0;font-size:1.3rem}
+  .brand{flex-direction:column;align-items:flex-start;gap:0;margin-right:0;flex:1 1 0;min-width:0}
+  .brand h1{font-size:1.25rem;line-height:1.1}
+  .brand .sub{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.74rem}
+  #stats{font-size:.74rem}
+  #cur{font-weight:700;color:var(--ink)}
+  #cur::after{content:' · ';font-weight:400;color:var(--muted)}
+  .actions{display:none}
+  #q{display:none;flex:1 1 100%;max-width:none;min-height:42px}
+  header.searching #q{display:block}
   input,select,textarea{font-size:16px!important}
   .layout{grid-template-columns:1fr;gap:12px;padding:12px}
-  aside{position:static;max-height:none;display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;margin:0 -12px;padding:0 12px 6px;scrollbar-width:none}
-  aside::-webkit-scrollbar{display:none}
-  aside h4{display:none}
-  .cat{width:auto;flex:none;white-space:nowrap;border:1px solid var(--line);border-radius:999px;padding:8px 14px}
-  .cat .edit{display:none}
-  .cat.active .edit{display:inline;opacity:1;padding-left:4px}
+  aside{position:fixed;z-index:30;top:0;left:0;bottom:0;align-self:stretch;height:100vh;height:100dvh;width:min(84vw,320px);max-height:none;margin:0;padding:calc(14px + env(safe-area-inset-top)) 12px calc(14px + env(safe-area-inset-bottom));background:var(--paper);border-right:1px solid var(--ink);overflow-y:auto;transform:translateX(-102%);visibility:hidden;transition:transform .22s ease,visibility 0s linear .22s}
+  body.menu-open{overflow:hidden}
+  body.menu-open aside{transform:none;visibility:visible;box-shadow:0 0 40px rgba(0,0,0,.45);transition:transform .22s ease,visibility 0s}
+  #scrim{display:block}
+  body.menu-open #scrim{opacity:1;pointer-events:auto}
+  aside h4{display:block}
+  .cat{width:100%;white-space:normal;border:0;border-radius:8px;padding:10px 12px}
+  .cat .edit{display:inline;opacity:.6}
+  .drawer-actions{display:block;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
   .filters{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
   .filters::-webkit-scrollbar{display:none}
   .chip{white-space:nowrap;flex:none}
@@ -181,7 +189,9 @@ textarea{min-height:130px;resize:vertical}
 </head>
 <body>
 <header>
-  <div class="brand"><h1>Mi Revista</h1><span id="stats"></span></div>
+  <button class="btn" id="b-menu" aria-label="Abrir menú" aria-expanded="false">☰</button>
+  <div class="brand"><h1>Mi Revista</h1><div class="sub"><span id="cur"></span><span id="stats"></span></div></div>
+  <button class="btn" id="b-search" aria-label="Buscar">🔍</button>
   <input id="q" type="search" placeholder="🔍 Buscar en mi revista…">
   <div class="actions">
     <button class="btn primary" id="b-new"><span>＋</span><span class="lbl"> Nuevo</span></button>
@@ -271,6 +281,7 @@ textarea{min-height:130px;resize:vertical}
   <div id="lb-cap"></div>
 </dialog>
 
+<div id="scrim"></div>
 <button type="button" id="fab" class="btn primary" aria-label="Nueva entrada" title="Nueva entrada">＋</button>
 <div id="toast"></div>
 
@@ -364,11 +375,18 @@ function render(){
   h += state.cats.map(c=>item(c.id,c.emoji,c.name,count(c.id),true)).join('');
   if(orphan) h += item('none','📌','Sin categoría',orphan);
   h += `<button class="cat" id="b-newcat" style="color:var(--muted)">＋ Nueva categoría</button>`;
+  h += `<div class="drawer-actions"><h4>Acciones</h4>
+    <button class="cat" data-act="random">🎲 Sorpréndeme</button>
+    <button class="cat" data-act="export">⬇ Exportar copia</button>
+    <button class="cat" data-act="import">⬆ Importar copia</button>
+    <button class="cat" data-act="theme">🌓 Cambiar tema</button></div>`;
   $('#side').innerHTML = h;
 
   // filtros
   const pend = state.entries.filter(e=>!e.done).length;
   $('#stats').textContent = `${state.entries.length} entradas · ${pend} por investigar`;
+  const cc = state.cat==='all' ? {emoji:'📖',name:'Todo'} : state.cat==='fav' ? {emoji:'⭐',name:'Favoritos'} : catOf(state.cat);
+  $('#cur').textContent = `${cc.emoji} ${cc.name}`;
   $('#filters').innerHTML = [['all','Todas'],['pending','🕓 Por investigar'],['done','✅ Investigadas']]
     .map(([k,t])=>`<button class="chip ${state.status===k?'active':''}" data-status="${k}">${t}</button>`).join('');
 
@@ -766,10 +784,30 @@ try{ const t=localStorage.getItem('revista-theme'); if(t) document.documentEleme
 syncTheme();
 matchMedia('(prefers-color-scheme:dark)').addEventListener?.('change', syncTheme);
 $('#q').addEventListener('input', e=>{ state.q=e.target.value; render(); });
+/* menú lateral (móvil) */
+let menuCW = null;
+function openMenu(){
+  document.body.classList.add('menu-open'); $('#b-menu').setAttribute('aria-expanded','true');
+  try{ if(typeof CloseWatcher!=='undefined'){ menuCW = new CloseWatcher(); menuCW.onclose = ()=>{ menuCW=null; closeMenu(); }; } }catch{}
+}
+function closeMenu(){
+  if(menuCW){ const c=menuCW; menuCW=null; try{ c.destroy(); }catch{} }
+  document.body.classList.remove('menu-open'); $('#b-menu').setAttribute('aria-expanded','false');
+}
+$('#b-menu').onclick = ()=> document.body.classList.contains('menu-open') ? closeMenu() : openMenu();
+$('#scrim').onclick = closeMenu;
+addEventListener('keydown', e=>{ if(e.key==='Escape') closeMenu(); });
+matchMedia('(min-width:801px)').addEventListener?.('change', e=>{ if(e.matches) closeMenu(); });
+$('#b-search').onclick = ()=>{
+  const h = document.querySelector('header'), on = !h.classList.contains('searching');
+  h.classList.toggle('searching', on);
+  if(on) $('#q').focus(); else { $('#q').value=''; state.q=''; render(); }
+};
 $('#side').addEventListener('click', e=>{
-  if(e.target.closest('#b-newcat')) return openCat();
-  const ed = e.target.closest('[data-edit-cat]'); if(ed){ e.stopPropagation(); return openCat(ed.dataset.editCat); }
-  const b = e.target.closest('[data-cat]'); if(b){ state.cat=b.dataset.cat; render(); }
+  const a = e.target.closest('[data-act]'); if(a){ closeMenu(); return $('#b-'+a.dataset.act).click(); }
+  if(e.target.closest('#b-newcat')){ closeMenu(); return openCat(); }
+  const ed = e.target.closest('[data-edit-cat]'); if(ed){ e.stopPropagation(); closeMenu(); return openCat(ed.dataset.editCat); }
+  const b = e.target.closest('[data-cat]'); if(b){ state.cat=b.dataset.cat; render(); closeMenu(); scrollTo(0,0); }
 });
 $('#filters').addEventListener('click', e=>{
   const b=e.target.closest('[data-status]'); if(b){ state.status=b.dataset.status; render(); }
